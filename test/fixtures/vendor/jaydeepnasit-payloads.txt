@@ -1,0 +1,8 @@
+[a](javascript:alert(1))
+[a](javascript:alert`1`)
+[a](javascript:void(0);alert(1))
+![a](javascript:alert(1))
+<script>alert(1)</script>
+<img src=1 onerror=alert(1)>
+<svg onload=alert(1)>
+[a](vbscript:alert(1))

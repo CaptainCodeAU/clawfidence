@@ -1,0 +1,8 @@
+[a](javascript:alert(1))
+[a](JAVASCRIPT:alert(1))
+[a](JaVaScRiPt:alert(1))
+![a](javascript:alert(1))
+[a](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==)
+<script>alert(1)</script>
+<img src=x onerror=alert(1)>
+<svg/onload=alert(1)>
