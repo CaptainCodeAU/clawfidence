@@ -1,7 +1,6 @@
 import MarkdownIt from "markdown-it";
 import type { Finding } from "../types.js";
-
-const ALLOWED_SCHEMES = ["http:", "https:", "mailto:", "tel:", "#"];
+import { normaliseUri, isDangerousScheme } from "../utils/normalise-uri.js";
 
 let findingCounter = 0;
 function makeFinding(
@@ -21,39 +20,6 @@ function makeFinding(
     description,
     action: "removed",
   };
-}
-
-function normaliseUri(uri: string): string {
-  // Decode percent-encoded characters
-  let decoded = uri;
-  try {
-    decoded = decodeURIComponent(uri);
-  } catch {
-    // ignore malformed encoding
-  }
-  // Remove whitespace (whitespace-insertion bypasses)
-  return decoded.replace(/[\s\x00-\x1f]/g, "").toLowerCase();
-}
-
-function isDangerousScheme(href: string): boolean {
-  const normalised = normaliseUri(href);
-
-  // Check against allowed schemes
-  for (const scheme of ALLOWED_SCHEMES) {
-    if (normalised.startsWith(scheme)) return false;
-  }
-
-  // Relative URLs are fine
-  if (
-    normalised.startsWith("/") ||
-    normalised.startsWith("./") ||
-    normalised.startsWith("../") ||
-    !normalised.includes(":")
-  ) {
-    return false;
-  }
-
-  return true;
 }
 
 function hasEventHandler(text: string): boolean {

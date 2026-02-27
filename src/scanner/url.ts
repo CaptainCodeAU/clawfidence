@@ -1,5 +1,6 @@
 import MarkdownIt from "markdown-it";
 import type { Finding } from "../types.js";
+import { normaliseUri } from "../utils/normalise-uri.js";
 
 const ALLOWED_SCHEMES = ["https:", "http:", "mailto:", "tel:"];
 
@@ -21,16 +22,6 @@ function makeFinding(
     description,
     action: "flagged",
   };
-}
-
-function normaliseUri(uri: string): string {
-  let decoded = uri;
-  try {
-    decoded = decodeURIComponent(uri);
-  } catch {
-    // ignore
-  }
-  return decoded.replace(/[\s\x00-\x1f]/g, "").toLowerCase();
 }
 
 function isIpAddress(hostname: string): boolean {
