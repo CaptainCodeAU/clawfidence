@@ -50,33 +50,34 @@ function isInsideCodeFence(text: string, matchIndex: number): boolean {
   return fenceCount % 2 === 1;
 }
 
-function looksEducational(text: string): boolean {
-  const lcText = text.toLowerCase();
-  return (
-    lcText.includes("how to write") ||
-    lcText.includes("here's how") ||
-    lcText.includes("example of") ||
-    lcText.includes("for instance") ||
-    lcText.includes("tutorial") ||
-    lcText.includes("documentation") ||
-    lcText.includes("explaining") ||
-    lcText.includes("discuss")
-  );
+function isInEducationalContext(text: string, matchIndex: number): boolean {
+  // Check a window of ~200 chars before the match for educational framing
+  const windowStart = Math.max(0, matchIndex - 200);
+  const before = text.slice(windowStart, matchIndex).toLowerCase();
+  const educationalFraming = [
+    "example of",
+    "how to write",
+    "here's how",
+    "for instance",
+    "such as",
+    "e.g.",
+    "demonstrates",
+  ];
+  return educationalFraming.some((phrase) => before.includes(phrase));
 }
 
 export function scanInjection(md: string, rawHtml?: string): Finding[] {
   findingCounter = 0;
   const findings: Finding[] = [];
 
-  // Skip if text looks educational
-  if (looksEducational(md)) {
-    return findings;
-  }
-
   // Check for injection patterns in plain text
   for (const { pattern, desc } of INJECTION_PATTERNS) {
     const match = pattern.exec(md);
-    if (match && !isInsideCodeFence(md, match.index)) {
+    if (
+      match &&
+      !isInsideCodeFence(md, match.index) &&
+      !isInEducationalContext(md, match.index)
+    ) {
       findings.push(
         makeFinding("critical", match[0], desc, "likely_injection"),
       );
@@ -85,7 +86,11 @@ export function scanInjection(md: string, rawHtml?: string): Finding[] {
 
   // Check for SYSTEM: prefix
   const sysMatch = SYSTEM_PREFIX_PATTERN.exec(md);
-  if (sysMatch && !isInsideCodeFence(md, sysMatch.index)) {
+  if (
+    sysMatch &&
+    !isInsideCodeFence(md, sysMatch.index) &&
+    !isInEducationalContext(md, sysMatch.index)
+  ) {
     findings.push(
       makeFinding(
         "critical",
