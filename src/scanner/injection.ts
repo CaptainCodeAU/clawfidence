@@ -46,7 +46,7 @@ const SYSTEM_PREFIX_PATTERN = /^SYSTEM:\s/im;
 
 function isInsideCodeFence(text: string, matchIndex: number): boolean {
   const before = text.slice(0, matchIndex);
-  const fenceCount = (before.match(/^```/gm) || []).length;
+  const fenceCount = (before.match(/^(?:`{3,}|~{3,})/gm) || []).length;
   return fenceCount % 2 === 1;
 }
 
