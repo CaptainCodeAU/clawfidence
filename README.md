@@ -13,7 +13,7 @@ First responder for your Markdown pipeline. Defangs prompt injection, strips XSS
 - **XSS** &mdash; dangerous URIs, event handlers (including entity-encoded), script tags, unclosed dangerous tags, image breakout payloads
 - **Prompt injection** &mdash; "ignore previous instructions", SYSTEM: prefix (case-insensitive), hidden content, base64-encoded payloads
 - **URL** &mdash; scheme allowlisting, IDN homograph detection (all labels), IPv4/IPv6/hex/octal/decimal IP addresses, case-insensitive prefix allowlists
-- **Unicode** &mdash; zero-width characters, bidirectional overrides, variation selectors
+- **Unicode** &mdash; zero-width characters, bidirectional overrides, variation selectors, mixed-script homoglyph detection
 
 ## Install
 
