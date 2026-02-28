@@ -183,8 +183,9 @@ export function scanUrls(
 
     // Prefix allowlists
     if (type === "link" && options?.allowedLinkPrefixes) {
+      const urlLower = url.toLowerCase();
       const allowed = options.allowedLinkPrefixes.some((prefix) =>
-        url.startsWith(prefix),
+        urlLower.startsWith(prefix.toLowerCase()),
       );
       if (!allowed) {
         findings.push(
@@ -199,8 +200,9 @@ export function scanUrls(
     }
 
     if (type === "image" && options?.allowedImagePrefixes) {
+      const urlLower = url.toLowerCase();
       const allowed = options.allowedImagePrefixes.some((prefix) =>
-        url.startsWith(prefix),
+        urlLower.startsWith(prefix.toLowerCase()),
       );
       if (!allowed) {
         findings.push(

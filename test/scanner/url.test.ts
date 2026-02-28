@@ -83,4 +83,18 @@ describe("scanUrls", () => {
     const findings = scanUrls("[x](http://0300.0250.0001.0001/)");
     expect(findings.some((f) => f.category === "suspicious_url")).toBe(true);
   });
+
+  it("6.15 prefix allowlist is case-insensitive", () => {
+    const findings = scanUrls("[x](HTTPS://TRUSTED.COM/page)", {
+      allowedLinkPrefixes: ["https://trusted.com"],
+    });
+    expect(findings.length).toBe(0);
+  });
+
+  it("6.16 image prefix allowlist is case-insensitive", () => {
+    const findings = scanUrls("![img](HTTPS://CDN.EXAMPLE.COM/pic.png)", {
+      allowedImagePrefixes: ["https://cdn.example.com"],
+    });
+    expect(findings.length).toBe(0);
+  });
 });
