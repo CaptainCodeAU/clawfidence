@@ -66,6 +66,11 @@ describe("scanMarkdownXss", () => {
     expect(findings.some((f) => f.category === "script_injection")).toBe(true);
   });
 
+  it("5.14 detects angle-bracket link ref definition abuse", () => {
+    const findings = scanMarkdownXss("[foo]: <javascript:alert(1)>");
+    expect(findings.some((f) => f.category === "script_injection")).toBe(true);
+  });
+
   it("5.13 non-allowlisted scheme passes clean", () => {
     const findings = scanMarkdownXss("[a](https://example.com)");
     expect(findings.length).toBe(0);

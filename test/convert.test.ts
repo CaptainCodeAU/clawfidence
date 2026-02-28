@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { htmlToMarkdown } from "../src/convert/html-to-md.js";
+import { sanitiseMarkdown } from "../src/convert/md-to-md.js";
 
 describe("htmlToMarkdown", () => {
   it("4.1 converts headings", () => {
@@ -56,6 +57,11 @@ describe("htmlToMarkdown", () => {
   it("4.9 converts blockquotes", () => {
     const md = htmlToMarkdown("<blockquote><p>quote</p></blockquote>");
     expect(md).toContain("> quote");
+  });
+
+  it("4.11 sanitiseMarkdown strips angle-bracket link ref definition", () => {
+    const { clean } = sanitiseMarkdown("[foo]: <javascript:alert(1)>");
+    expect(clean).not.toContain("javascript:");
   });
 
   it("4.10 --no-images strips images", () => {
