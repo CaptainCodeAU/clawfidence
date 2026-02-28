@@ -116,7 +116,7 @@ export function scanMarkdownXss(md: string): Finding[] {
     const line = lines[i];
 
     // Track code fences
-    if (/^```/.test(line.trim())) {
+    if (/^(?:`{3,}|~{3,})/.test(line.trim())) {
       inCodeFence = !inCodeFence;
       continue;
     }

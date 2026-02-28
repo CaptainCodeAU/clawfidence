@@ -71,6 +71,18 @@ describe("scanMarkdownXss", () => {
     expect(findings.some((f) => f.category === "script_injection")).toBe(true);
   });
 
+  it("L4: does not flag content inside tilde code fences", () => {
+    const md = "~~~\n<script>alert(1)</script>\n~~~";
+    const findings = scanMarkdownXss(md);
+    expect(findings).toHaveLength(0);
+  });
+
+  it("L4: still flags content after tilde code fence closes", () => {
+    const md = "~~~\nsafe code\n~~~\n<script>alert(1)</script>";
+    const findings = scanMarkdownXss(md);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
   it("5.13 non-allowlisted scheme passes clean", () => {
     const findings = scanMarkdownXss("[a](https://example.com)");
     expect(findings.length).toBe(0);
