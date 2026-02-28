@@ -84,6 +84,23 @@ export function sanitiseMarkdown(md: string): {
     },
   );
 
+  // Unclosed dangerous tags (no closing tag — capture to end of line or string)
+  // Must run before self-closing pass so content after unclosed tags is also removed
+  content = content.replace(
+    /<(script|iframe|object|embed|form|base|meta|link|style)\b[^>]*>[^\n]*/gi,
+    (match) => {
+      findings.push(
+        makeFinding(
+          "html_injection",
+          "critical",
+          match,
+          "Unclosed dangerous HTML element removed",
+        ),
+      );
+      return "";
+    },
+  );
+
   // Self-closing dangerous tags
   content = content.replace(
     /<(script|iframe|object|embed|form|base|meta|link|style)\b[^>]*\/?>/gi,

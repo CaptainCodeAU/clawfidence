@@ -64,6 +64,17 @@ describe("htmlToMarkdown", () => {
     expect(clean).not.toContain("javascript:");
   });
 
+  it("4.12 sanitiseMarkdown strips unclosed script tags", () => {
+    const { clean } = sanitiseMarkdown("<script>evil code here");
+    expect(clean).not.toContain("<script");
+    expect(clean).not.toContain("evil code here");
+  });
+
+  it("4.13 sanitiseMarkdown strips unclosed iframe tags", () => {
+    const { clean } = sanitiseMarkdown("<iframe src=evil.com>content after");
+    expect(clean).not.toContain("<iframe");
+  });
+
   it("4.10 --no-images strips images", () => {
     const md = htmlToMarkdown(
       '<p>text</p><img src="img.png" alt="pic"><p>more</p>',
