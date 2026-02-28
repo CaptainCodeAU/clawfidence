@@ -8,3 +8,5 @@ coverage/
 .claude/
 .worktrees/
 docs/plans/
+.vscode/
+DodgyMarkdownsForTesting/
