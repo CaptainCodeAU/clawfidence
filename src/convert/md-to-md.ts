@@ -173,6 +173,23 @@ export function sanitiseMarkdown(md: string): {
     },
   );
 
+  // Remove event handlers with entity-encoded = sign
+  // Catches: onerror&#61;, onerror&#x3d;, onerror&#x3D;, onerror&equals;
+  content = content.replace(
+    /<([a-z][a-z0-9]*)\b([^>]*?)\bon\w+(?:&#(?:x3[dD]|61);|&equals;)[^\s>]*([^>]*)>/gi,
+    (match, tag, before, after) => {
+      findings.push(
+        makeFinding(
+          "script_injection",
+          "critical",
+          match,
+          "Entity-encoded event handler in HTML removed",
+        ),
+      );
+      return `<${tag}${before}${after}>`;
+    },
+  );
+
   // Handle image breakout payloads: event handlers in alt text or URL
   // e.g., ![a"onerror="alert(1)](x) or ![a](url"onload="alert(1))
   content = content.replace(

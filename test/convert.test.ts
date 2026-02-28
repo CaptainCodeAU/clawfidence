@@ -75,6 +75,27 @@ describe("htmlToMarkdown", () => {
     expect(clean).not.toContain("<iframe");
   });
 
+  it("4.14 sanitiseMarkdown strips entity-encoded event handler (decimal)", () => {
+    const { clean, findings } = sanitiseMarkdown("<img src=x onerror&#61;alert(1)>");
+    expect(clean).not.toContain("onerror");
+    expect(clean).not.toContain("alert");
+    expect(findings.some((f) => f.category === "script_injection")).toBe(true);
+  });
+
+  it("4.15 sanitiseMarkdown strips entity-encoded event handler (hex)", () => {
+    const { clean, findings } = sanitiseMarkdown("<img src=x onerror&#x3d;alert(1)>");
+    expect(clean).not.toContain("onerror");
+    expect(clean).not.toContain("alert");
+    expect(findings.some((f) => f.category === "script_injection")).toBe(true);
+  });
+
+  it("4.16 sanitiseMarkdown strips entity-encoded event handler (named)", () => {
+    const { clean, findings } = sanitiseMarkdown("<img src=x onerror&equals;alert(1)>");
+    expect(clean).not.toContain("onerror");
+    expect(clean).not.toContain("alert");
+    expect(findings.some((f) => f.category === "script_injection")).toBe(true);
+  });
+
   it("4.10 --no-images strips images", () => {
     const md = htmlToMarkdown(
       '<p>text</p><img src="img.png" alt="pic"><p>more</p>',
