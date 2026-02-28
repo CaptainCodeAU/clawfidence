@@ -50,7 +50,9 @@ describe("scanUnicode", () => {
 
   it("L3: detects basic variation selectors (U+FE00-U+FE0F)", () => {
     const { findings } = scanUnicode("Hello\uFE0Fworld");
-    expect(findings.some(f => f.description.includes("presentation selector"))).toBe(true);
+    expect(
+      findings.some((f) => f.description.includes("presentation selector")),
+    ).toBe(true);
   });
 
   it("L3: strips variation selectors in llmSafe mode", () => {
@@ -60,11 +62,73 @@ describe("scanUnicode", () => {
 
   it("L3: detects supplementary variation selectors (U+E0100-U+E01EF)", () => {
     const { findings } = scanUnicode("Hello\u{E0100}world");
-    expect(findings.some(f => f.description.includes("Variation selector supplement"))).toBe(true);
+    expect(
+      findings.some((f) =>
+        f.description.includes("Variation selector supplement"),
+      ),
+    ).toBe(true);
   });
 
   it("L3: strips supplementary variation selectors in llmSafe mode", () => {
     const { cleaned } = scanUnicode("Hello\u{E0100}world", { llmSafe: true });
     expect(cleaned).toBe("Helloworld");
+  });
+
+  it("L2: detects mixed Latin-Cyrillic word (Cyrillic а in Latin word)", () => {
+    // "pаypal" — the а is Cyrillic U+0430, rest is Latin
+    const { findings } = scanUnicode("Visit p\u0430ypal today");
+    expect(
+      findings.some((f) => f.description.includes("Mixed Latin-Cyrillic")),
+    ).toBe(true);
+  });
+
+  it("L2: ignores pure Latin text", () => {
+    const { findings } = scanUnicode("Hello world paypal");
+    expect(
+      findings.some((f) => f.description.includes("Mixed Latin-Cyrillic")),
+    ).toBe(false);
+  });
+
+  it("L2: ignores pure Cyrillic text", () => {
+    // "Привет мир" — all Cyrillic
+    const { findings } = scanUnicode(
+      "\u041F\u0440\u0438\u0432\u0435\u0442 \u043C\u0438\u0440",
+    );
+    expect(
+      findings.some((f) => f.description.includes("Mixed Latin-Cyrillic")),
+    ).toBe(false);
+  });
+
+  it("L2: detects multiple mixed-script words", () => {
+    // Two words each mixing Latin + Cyrillic
+    const { findings } = scanUnicode("p\u0430ypal and \u0430pple");
+    const mixedFindings = findings.filter((f) =>
+      f.description.includes("Mixed Latin-Cyrillic"),
+    );
+    expect(mixedFindings.length).toBe(2);
+  });
+
+  it("L2: skips mixed-script inside fenced code blocks", () => {
+    const input = "```\np\u0430ypal\n```";
+    const { findings } = scanUnicode(input);
+    expect(
+      findings.some((f) => f.description.includes("Mixed Latin-Cyrillic")),
+    ).toBe(false);
+  });
+
+  it("L2: skips mixed-script inside tilde code fences", () => {
+    const input = "~~~\np\u0430ypal\n~~~";
+    const { findings } = scanUnicode(input);
+    expect(
+      findings.some((f) => f.description.includes("Mixed Latin-Cyrillic")),
+    ).toBe(false);
+  });
+
+  it("L2: confidence is suspicious, not confirmed", () => {
+    const { findings } = scanUnicode("p\u0430ypal");
+    const mixed = findings.find((f) =>
+      f.description.includes("Mixed Latin-Cyrillic"),
+    );
+    expect(mixed?.confidence).toBe("suspicious");
   });
 });
