@@ -29,7 +29,7 @@ function isIpAddress(hostname: string): boolean {
 }
 
 function isIdnHomograph(hostname: string): boolean {
-  return hostname.startsWith("xn--");
+  return hostname.split(".").some((label) => label.startsWith("xn--"));
 }
 
 function extractUrls(

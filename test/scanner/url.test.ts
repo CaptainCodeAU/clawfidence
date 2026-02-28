@@ -53,4 +53,14 @@ describe("scanUrls", () => {
     const findings = scanUrls("[x](java%73cript:alert(1))");
     expect(findings.some((f) => f.category === "script_injection")).toBe(true);
   });
+
+  it("6.10 detects IDN homograph in parent domain label", () => {
+    const findings = scanUrls("[x](http://safe.xn--80ak6aa92e.com/path)");
+    expect(findings.some((f) => f.category === "suspicious_url")).toBe(true);
+  });
+
+  it("6.11 detects IDN homograph in any subdomain label", () => {
+    const findings = scanUrls("[x](http://a.b.xn--nxasmq6b.c.com/path)");
+    expect(findings.some((f) => f.category === "suspicious_url")).toBe(true);
+  });
 });
