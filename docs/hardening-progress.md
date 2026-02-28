@@ -46,12 +46,12 @@ Tracking 17 tasks across 6 batches fixing security bypass vectors discovered dur
 | 14   | L5  | LOW      | Broaden event handler detection to `on[a-z]+` pattern | ✅     |
 | 15   | L3  | LOW      | Detect variation selectors in unicode scanner         | ✅     |
 
-## Batch 6 — Low Severity (part 2) + Final
+## Batch 6 — Low Severity (part 2) + Final ✅
 
 | Task | ID  | Severity | Description                                                   | Status |
 | ---- | --- | -------- | ------------------------------------------------------------- | ------ |
-| 16   | L2  | LOW      | Detect mixed Latin-Cyrillic homoglyph attacks                 | ⬜     |
-| 17   | —   | —        | Run final coverage report, full regression, XSS payload suite | ⬜     |
+| 16   | L2  | LOW      | Detect mixed Latin-Cyrillic homoglyph attacks                 | ✅     |
+| 17   | —   | —        | Run final coverage report, full regression, XSS payload suite | ✅     |
 
 ---
 
@@ -65,3 +65,4 @@ Tracking 17 tasks across 6 batches fixing security bypass vectors discovered dur
 | Batch 3     | 174           |
 | Batch 4     | 183           |
 | Batch 5     | 199           |
+| Batch 6     | 206           |
