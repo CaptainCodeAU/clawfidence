@@ -85,6 +85,16 @@ describe("sanitiseHtml", () => {
     expect(clean).not.toContain("<math");
   });
 
+  it("L5: strips exotic event handler onanimationstart from HTML", () => {
+    const { clean } = sanitiseHtml('<img src="x.png" onanimationstart="alert(1)">');
+    expect(clean).not.toContain("onanimationstart");
+  });
+
+  it("L5: strips onpointerover from HTML", () => {
+    const { clean } = sanitiseHtml('<div onpointerover="alert(1)">text</div>');
+    expect(clean).not.toContain("onpointerover");
+  });
+
   it("3.10 strips CSS expression()", () => {
     const { clean } = sanitiseHtml(
       '<div style="width:expression(alert(1))">text</div>',

@@ -210,15 +210,7 @@ export function sanitiseHtml(html: string): {
       "svg",
       "math",
     ],
-    FORBID_ATTR: [
-      "onerror",
-      "onload",
-      "onclick",
-      "onmouseover",
-      "onfocus",
-      "onblur",
-      "style",
-    ],
+    FORBID_ATTR: ["style"],
   });
 
   // Remove hooks to prevent leaking between calls
