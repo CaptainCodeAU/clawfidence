@@ -34,7 +34,7 @@ function extractCodeBlocks(text: string): {
   const blocks: CodeBlock[] = [];
   let idx = 0;
   const stripped = text.replace(
-    /```[\s\S]*?```|`[^`\n]+`/g,
+    /(`{3,}|~{3,})[\s\S]*?\1|`[^`\n]+`/g,
     (match, offset) => {
       const placeholder = `\x00CODEBLOCK${idx++}\x00`;
       blocks.push({
@@ -193,7 +193,7 @@ export function sanitiseMarkdown(md: string): {
   // Handle image breakout payloads: event handlers in alt text or URL
   // e.g., ![a"onerror="alert(1)](x) or ![a](url"onload="alert(1))
   content = content.replace(
-    /!\[([^\]]*(?:onerror|onload|onfocus|onmouseover)[^\]]*)\]\(([^)]*)\)/gi,
+    /!\[([^\]]*on[a-z]+[^\]]*)\]\(([^)]*)\)/gi,
     (match) => {
       findings.push(
         makeFinding(
@@ -207,7 +207,7 @@ export function sanitiseMarkdown(md: string): {
     },
   );
   content = content.replace(
-    /!\[([^\]]*)\]\(([^)]*(?:onerror|onload|onfocus|onmouseover)[^)]*)\)/gi,
+    /!\[([^\]]*)\]\(([^)]*on[a-z]+[^)]*)\)/gi,
     (match) => {
       findings.push(
         makeFinding(
@@ -223,7 +223,7 @@ export function sanitiseMarkdown(md: string): {
 
   // Image tag with event handler in attributes (e.g. ![a](x onerror=alert(1)))
   content = content.replace(
-    /!\[([^\]]*)\]\(([^)]*\s+(?:onerror|onload|onfocus|onmouseover)\s*=[^)]*)\)/gi,
+    /!\[([^\]]*)\]\(([^)]*\s+on[a-z]+\s*=[^)]*)\)/gi,
     (match) => {
       findings.push(
         makeFinding(
@@ -344,7 +344,7 @@ export function sanitiseMarkdown(md: string): {
   // Safety net: remove any remaining text containing event handler patterns
   // in image-like constructs (catches Turndown-escaped variants)
   content = content.replace(
-    /!?\\\[.*?(?:onerror|onload|onfocus|onmouseover)\s*=.*?\\\]\(.*?\)/gi,
+    /!?\\\[.*?on[a-z]+\s*=.*?\\\]\(.*?\)/gi,
     (match) => {
       findings.push(
         makeFinding(

@@ -96,6 +96,30 @@ describe("htmlToMarkdown", () => {
     expect(findings.some((f) => f.category === "script_injection")).toBe(true);
   });
 
+  it("L4: preserves content inside tilde code fences", () => {
+    const md = "~~~\n<script>alert(1)</script>\n~~~";
+    const { clean } = sanitiseMarkdown(md);
+    expect(clean).toContain("<script>alert(1)</script>");
+  });
+
+  it("L5: removes image with exotic event handler in alt text", () => {
+    const md = '![a"onpointerover="alert(1)](x.png)';
+    const { clean } = sanitiseMarkdown(md);
+    expect(clean).not.toContain("onpointerover");
+  });
+
+  it("L5: removes image with onanimationstart in URL", () => {
+    const md = '![img](x"onanimationstart="alert(1))';
+    const { clean } = sanitiseMarkdown(md);
+    expect(clean).not.toContain("onanimationstart");
+  });
+
+  it("L5: catches escaped syntax with exotic handler", () => {
+    const md = '!\\[a"ontransitionend="alert(1)\\](x)';
+    const { clean } = sanitiseMarkdown(md);
+    expect(clean).not.toContain("ontransitionend");
+  });
+
   it("4.10 --no-images strips images", () => {
     const md = htmlToMarkdown(
       '<p>text</p><img src="img.png" alt="pic"><p>more</p>',
