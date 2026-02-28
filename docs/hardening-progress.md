@@ -16,9 +16,9 @@
 | 10 | M3 | Medium | IP detection for IPv6/octal/hex/decimal | ✅ |
 | 11 | M5 | Medium | Prefix allowlist case sensitivity | ✅ |
 | 12 | M4 | Medium | HTML entity-encoded event handlers | ✅ |
-| 13 | L4 | Low | Tilde fence tracking | ⬜ |
-| 14 | L5 | Low | Broaden event handler detection | ⬜ |
-| 15 | L3 | Low | Variation selector detection | ⬜ |
+| 13 | L4 | Low | Tilde fence tracking | ✅ |
+| 14 | L5 | Low | Broaden event handler detection | ✅ |
+| 15 | L3 | Low | Variation selector detection | ✅ |
 | 16 | L2 | Low | Mixed-script homoglyph detection | ⬜ |
 | 17 | — | — | Final coverage report and full regression | ⬜ |
 
@@ -31,3 +31,4 @@
 | Batch 2 (Tasks 5-7) | 165 | H2, H3, M6 |
 | Batch 3 (Tasks 8-9) | 174 | M1, M2 |
 | Batch 4 (Tasks 10-12) | 183 | M3, M5, M4 |
+| Batch 5 (Tasks 13-15) | 199 | L4, L5, L3 |
