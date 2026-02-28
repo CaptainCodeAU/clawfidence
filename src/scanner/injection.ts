@@ -182,7 +182,7 @@ export function scanInjection(md: string, rawHtml?: string): Finding[] {
 
   // display:none hidden content
   const hiddenRegex =
-    /style\s*=\s*"[^"]*display\s*:\s*none[^"]*"[^>]*>([\s\S]*?)<\//gi;
+    /style\s*=\s*["'][^"']*display\s*:\s*none[^"']*["'][^>]*>([\s\S]*?)<\//gi;
   let hiddenMatch;
   while ((hiddenMatch = hiddenRegex.exec(htmlToCheck)) !== null) {
     const content = hiddenMatch[1].toLowerCase();
@@ -204,7 +204,7 @@ export function scanInjection(md: string, rawHtml?: string): Finding[] {
 
   // font-size:0 hidden text
   const fontZeroRegex =
-    /style\s*=\s*"[^"]*font-size\s*:\s*0[^"]*"[^>]*>([\s\S]*?)<\//gi;
+    /style\s*=\s*["'][^"']*font-size\s*:\s*0[^"']*["'][^>]*>([\s\S]*?)<\//gi;
   let fontMatch;
   while ((fontMatch = fontZeroRegex.exec(htmlToCheck)) !== null) {
     const content = fontMatch[1].toLowerCase();
