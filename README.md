@@ -14,6 +14,7 @@ First responder for your Markdown pipeline. Defangs prompt injection, strips XSS
 - **Prompt injection** &mdash; "ignore previous instructions", SYSTEM: prefix (case-insensitive), hidden content, base64-encoded payloads
 - **URL** &mdash; scheme allowlisting, IDN homograph detection (all labels), IPv4/IPv6/hex/octal/decimal IP addresses, case-insensitive prefix allowlists
 - **Unicode** &mdash; zero-width characters, bidirectional overrides, variation selectors, mixed-script homoglyph detection
+- **Supply chain** &mdash; pipe-to-shell (`curl | bash`), binary downloads to system paths, privilege escalation installs, `chmod +x` on system paths, package manager installs
 
 ## Install
 

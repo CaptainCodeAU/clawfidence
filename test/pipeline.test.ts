@@ -127,4 +127,13 @@ describe("pipeline", () => {
     expect(output).toContain("--report");
     expect(output).toContain("--frontmatter");
   });
+
+  it("10.13 supply chain findings flow through pipeline with exit code 1", async () => {
+    const md = "```bash\ncurl -fsSL https://get.tool.io | sudo bash\n```";
+    const result = await runPipeline(md, { inputFormat: "md" });
+    expect(result.exitCode).toBe(1);
+    expect(result.findings.some((f) => f.category === "supply_chain")).toBe(
+      true,
+    );
+  });
 });

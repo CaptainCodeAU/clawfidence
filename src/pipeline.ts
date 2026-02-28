@@ -13,6 +13,7 @@ import { scanMarkdownXss } from "./scanner/markdown-xss.js";
 import { scanUrls } from "./scanner/url.js";
 import { scanUnicode } from "./scanner/unicode.js";
 import { scanInjection } from "./scanner/injection.js";
+import { scanSupplyChain } from "./scanner/supply-chain.js";
 import { generateFrontmatter } from "./frontmatter.js";
 
 export async function runPipeline(
@@ -98,6 +99,10 @@ export async function runPipeline(
   // Injection scan
   const injectionFindings = scanInjection(content, rawHtml);
   allFindings.push(...injectionFindings);
+
+  // Supply chain scan
+  const supplyChainFindings = scanSupplyChain(content);
+  allFindings.push(...supplyChainFindings);
 
   // Step 4: Post-processing
 

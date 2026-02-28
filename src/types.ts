@@ -9,7 +9,8 @@ export type FindingCategory =
   | "html_injection"
   | "prompt_injection"
   | "suspicious_url"
-  | "suspicious_unicode";
+  | "suspicious_unicode"
+  | "supply_chain";
 export type ActionTaken = "removed" | "flagged" | "kept";
 
 export interface Finding {
