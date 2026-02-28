@@ -70,6 +70,31 @@ describe("sanitiseHtml", () => {
     expect(serious.length).toBe(0);
   });
 
+  it("3.11 strips SVG elements", () => {
+    const { clean } = sanitiseHtml(
+      '<p>Text</p><svg><animate onbegin="alert(1)"></svg>',
+    );
+    expect(clean).not.toContain("<svg");
+    expect(clean).not.toContain("<animate");
+  });
+
+  it("3.12 strips MathML elements", () => {
+    const { clean } = sanitiseHtml(
+      "<p>Text</p><math><mrow><mi>x</mi></mrow></math>",
+    );
+    expect(clean).not.toContain("<math");
+  });
+
+  it("L5: strips exotic event handler onanimationstart from HTML", () => {
+    const { clean } = sanitiseHtml('<img src="x.png" onanimationstart="alert(1)">');
+    expect(clean).not.toContain("onanimationstart");
+  });
+
+  it("L5: strips onpointerover from HTML", () => {
+    const { clean } = sanitiseHtml('<div onpointerover="alert(1)">text</div>');
+    expect(clean).not.toContain("onpointerover");
+  });
+
   it("3.10 strips CSS expression()", () => {
     const { clean } = sanitiseHtml(
       '<div style="width:expression(alert(1))">text</div>',

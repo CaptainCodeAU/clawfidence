@@ -45,6 +45,26 @@ const BIDI_CHARS: Record<string, string> = {
   "\u2069": "Pop directional isolate (U+2069)",
 };
 
+// Variation selectors (U+FE00–U+FE0F)
+const VARIATION_SELECTORS: Record<string, string> = {
+  "\uFE00": "Variation selector-1 (U+FE00)",
+  "\uFE01": "Variation selector-2 (U+FE01)",
+  "\uFE02": "Variation selector-3 (U+FE02)",
+  "\uFE03": "Variation selector-4 (U+FE03)",
+  "\uFE04": "Variation selector-5 (U+FE04)",
+  "\uFE05": "Variation selector-6 (U+FE05)",
+  "\uFE06": "Variation selector-7 (U+FE06)",
+  "\uFE07": "Variation selector-8 (U+FE07)",
+  "\uFE08": "Variation selector-9 (U+FE08)",
+  "\uFE09": "Variation selector-10 (U+FE09)",
+  "\uFE0A": "Variation selector-11 (U+FE0A)",
+  "\uFE0B": "Variation selector-12 (U+FE0B)",
+  "\uFE0C": "Variation selector-13 (U+FE0C)",
+  "\uFE0D": "Variation selector-14 (U+FE0D)",
+  "\uFE0E": "Text presentation selector (U+FE0E)",
+  "\uFE0F": "Emoji presentation selector (U+FE0F)",
+};
+
 // Arabic/Persian script range for checking legitimate ZWNJ usage
 const ARABIC_PERSIAN_REGEX =
   /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/;
@@ -61,6 +81,10 @@ function isLegitimateZwnj(text: string, index: number): boolean {
 
 function isTagCharacter(codePoint: number): boolean {
   return codePoint >= 0xe0001 && codePoint <= 0xe007f;
+}
+
+function isVariationSelectorSupplement(codePoint: number): boolean {
+  return codePoint >= 0xe0100 && codePoint <= 0xe01ef;
 }
 
 export function scanUnicode(
@@ -83,6 +107,15 @@ export function scanUnicode(
         ),
       );
       // Skip surrogate pair
+      if (codePoint > 0xffff) i++;
+    } else if (codePoint && isVariationSelectorSupplement(codePoint)) {
+      findings.push(
+        makeFinding(
+          "warning",
+          text.slice(Math.max(0, i - 10), i + 10),
+          `Variation selector supplement (U+${codePoint.toString(16).toUpperCase()})`,
+        ),
+      );
       if (codePoint > 0xffff) i++;
     }
   }
@@ -123,18 +156,31 @@ export function scanUnicode(
     }
   }
 
+  // Check for variation selectors
+  for (const [char, desc] of Object.entries(VARIATION_SELECTORS)) {
+    let idx = text.indexOf(char);
+    while (idx !== -1) {
+      findings.push(
+        makeFinding("warning", text.slice(Math.max(0, idx - 10), idx + 10), desc),
+      );
+      idx = text.indexOf(char, idx + 1);
+    }
+  }
+
   // --llm-safe: strip all zero-width and BiDi characters
   if (options?.llmSafe) {
     const allChars = [
       ...Object.keys(ZERO_WIDTH_CHARS),
       ...Object.keys(BIDI_CHARS),
+      ...Object.keys(VARIATION_SELECTORS),
     ];
     cleaned = text;
     for (const char of allChars) {
       cleaned = cleaned.split(char).join("");
     }
-    // Also strip tag characters
+    // Also strip tag characters and supplementary variation selectors
     cleaned = cleaned.replace(/[\u{E0001}-\u{E007F}]/gu, "");
+    cleaned = cleaned.replace(/[\u{E0100}-\u{E01EF}]/gu, "");
   }
 
   return { findings, cleaned };

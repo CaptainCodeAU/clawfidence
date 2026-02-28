@@ -66,6 +66,35 @@ describe("scanMarkdownXss", () => {
     expect(findings.some((f) => f.category === "script_injection")).toBe(true);
   });
 
+  it("5.14 detects angle-bracket link ref definition abuse", () => {
+    const findings = scanMarkdownXss("[foo]: <javascript:alert(1)>");
+    expect(findings.some((f) => f.category === "script_injection")).toBe(true);
+  });
+
+  it("L4: does not flag content inside tilde code fences", () => {
+    const md = "~~~\n<script>alert(1)</script>\n~~~";
+    const findings = scanMarkdownXss(md);
+    expect(findings).toHaveLength(0);
+  });
+
+  it("L4: still flags content after tilde code fence closes", () => {
+    const md = "~~~\nsafe code\n~~~\n<script>alert(1)</script>";
+    const findings = scanMarkdownXss(md);
+    expect(findings.length).toBeGreaterThan(0);
+  });
+
+  it("L5: detects exotic event handlers in image breakout", () => {
+    const md = '![a"onanimationstart="alert(1)](x)';
+    const findings = scanMarkdownXss(md);
+    expect(findings.some(f => f.category === "script_injection")).toBe(true);
+  });
+
+  it("L5: detects onpointerover in nested parser confusion", () => {
+    const md = '<style><!--</style><img src=x onpointerover=alert(1)>-->';
+    const findings = scanMarkdownXss(md);
+    expect(findings.some(f => f.category === "script_injection")).toBe(true);
+  });
+
   it("5.13 non-allowlisted scheme passes clean", () => {
     const findings = scanMarkdownXss("[a](https://example.com)");
     expect(findings.length).toBe(0);

@@ -1,6 +1,5 @@
 import type { Finding } from "../types.js";
-
-const ALLOWED_SCHEMES = ["https:", "http:", "mailto:", "tel:"];
+import { normaliseUri, isDangerousScheme } from "../utils/normalise-uri.js";
 
 let findingCounter = 0;
 function makeFinding(
@@ -21,34 +20,6 @@ function makeFinding(
   };
 }
 
-function normaliseUri(uri: string): string {
-  let decoded = uri;
-  try {
-    decoded = decodeURIComponent(uri);
-  } catch {
-    // ignore
-  }
-  return decoded.replace(/[\s\x00-\x1f]/g, "").toLowerCase();
-}
-
-function isDangerousScheme(href: string): boolean {
-  const normalised = normaliseUri(href);
-  for (const scheme of ALLOWED_SCHEMES) {
-    if (normalised.startsWith(scheme)) return false;
-  }
-  // Relative URLs
-  if (
-    normalised.startsWith("/") ||
-    normalised.startsWith("./") ||
-    normalised.startsWith("../") ||
-    normalised.startsWith("#") ||
-    !normalised.includes(":")
-  ) {
-    return false;
-  }
-  return true;
-}
-
 interface CodeBlock {
   start: number;
   end: number;
@@ -63,7 +34,7 @@ function extractCodeBlocks(text: string): {
   const blocks: CodeBlock[] = [];
   let idx = 0;
   const stripped = text.replace(
-    /```[\s\S]*?```|`[^`\n]+`/g,
+    /(`{3,}|~{3,})[\s\S]*?\1|`[^`\n]+`/g,
     (match, offset) => {
       const placeholder = `\x00CODEBLOCK${idx++}\x00`;
       blocks.push({
@@ -107,6 +78,23 @@ export function sanitiseMarkdown(md: string): {
           "critical",
           match,
           "Dangerous HTML element removed",
+        ),
+      );
+      return "";
+    },
+  );
+
+  // Unclosed dangerous tags (no closing tag — capture to end of line or string)
+  // Must run before self-closing pass so content after unclosed tags is also removed
+  content = content.replace(
+    /<(script|iframe|object|embed|form|base|meta|link|style)\b[^>]*>[^\n]*/gi,
+    (match) => {
+      findings.push(
+        makeFinding(
+          "html_injection",
+          "critical",
+          match,
+          "Unclosed dangerous HTML element removed",
         ),
       );
       return "";
@@ -185,10 +173,27 @@ export function sanitiseMarkdown(md: string): {
     },
   );
 
+  // Remove event handlers with entity-encoded = sign
+  // Catches: onerror&#61;, onerror&#x3d;, onerror&#x3D;, onerror&equals;
+  content = content.replace(
+    /<([a-z][a-z0-9]*)\b([^>]*?)\bon\w+(?:&#(?:x3[dD]|61);|&equals;)[^\s>]*([^>]*)>/gi,
+    (match, tag, before, after) => {
+      findings.push(
+        makeFinding(
+          "script_injection",
+          "critical",
+          match,
+          "Entity-encoded event handler in HTML removed",
+        ),
+      );
+      return `<${tag}${before}${after}>`;
+    },
+  );
+
   // Handle image breakout payloads: event handlers in alt text or URL
   // e.g., ![a"onerror="alert(1)](x) or ![a](url"onload="alert(1))
   content = content.replace(
-    /!\[([^\]]*(?:onerror|onload|onfocus|onmouseover)[^\]]*)\]\(([^)]*)\)/gi,
+    /!\[([^\]]*on[a-z]+[^\]]*)\]\(([^)]*)\)/gi,
     (match) => {
       findings.push(
         makeFinding(
@@ -202,7 +207,7 @@ export function sanitiseMarkdown(md: string): {
     },
   );
   content = content.replace(
-    /!\[([^\]]*)\]\(([^)]*(?:onerror|onload|onfocus|onmouseover)[^)]*)\)/gi,
+    /!\[([^\]]*)\]\(([^)]*on[a-z]+[^)]*)\)/gi,
     (match) => {
       findings.push(
         makeFinding(
@@ -218,7 +223,7 @@ export function sanitiseMarkdown(md: string): {
 
   // Image tag with event handler in attributes (e.g. ![a](x onerror=alert(1)))
   content = content.replace(
-    /!\[([^\]]*)\]\(([^)]*\s+(?:onerror|onload|onfocus|onmouseover)\s*=[^)]*)\)/gi,
+    /!\[([^\]]*)\]\(([^)]*\s+on[a-z]+\s*=[^)]*)\)/gi,
     (match) => {
       findings.push(
         makeFinding(
@@ -339,7 +344,7 @@ export function sanitiseMarkdown(md: string): {
   // Safety net: remove any remaining text containing event handler patterns
   // in image-like constructs (catches Turndown-escaped variants)
   content = content.replace(
-    /!?\\\[.*?(?:onerror|onload|onfocus|onmouseover)\s*=.*?\\\]\(.*?\)/gi,
+    /!?\\\[.*?on[a-z]+\s*=.*?\\\]\(.*?\)/gi,
     (match) => {
       findings.push(
         makeFinding(

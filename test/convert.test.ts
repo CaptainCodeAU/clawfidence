@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { htmlToMarkdown } from "../src/convert/html-to-md.js";
+import { sanitiseMarkdown } from "../src/convert/md-to-md.js";
 
 describe("htmlToMarkdown", () => {
   it("4.1 converts headings", () => {
@@ -56,6 +57,67 @@ describe("htmlToMarkdown", () => {
   it("4.9 converts blockquotes", () => {
     const md = htmlToMarkdown("<blockquote><p>quote</p></blockquote>");
     expect(md).toContain("> quote");
+  });
+
+  it("4.11 sanitiseMarkdown strips angle-bracket link ref definition", () => {
+    const { clean } = sanitiseMarkdown("[foo]: <javascript:alert(1)>");
+    expect(clean).not.toContain("javascript:");
+  });
+
+  it("4.12 sanitiseMarkdown strips unclosed script tags", () => {
+    const { clean } = sanitiseMarkdown("<script>evil code here");
+    expect(clean).not.toContain("<script");
+    expect(clean).not.toContain("evil code here");
+  });
+
+  it("4.13 sanitiseMarkdown strips unclosed iframe tags", () => {
+    const { clean } = sanitiseMarkdown("<iframe src=evil.com>content after");
+    expect(clean).not.toContain("<iframe");
+  });
+
+  it("4.14 sanitiseMarkdown strips entity-encoded event handler (decimal)", () => {
+    const { clean, findings } = sanitiseMarkdown("<img src=x onerror&#61;alert(1)>");
+    expect(clean).not.toContain("onerror");
+    expect(clean).not.toContain("alert");
+    expect(findings.some((f) => f.category === "script_injection")).toBe(true);
+  });
+
+  it("4.15 sanitiseMarkdown strips entity-encoded event handler (hex)", () => {
+    const { clean, findings } = sanitiseMarkdown("<img src=x onerror&#x3d;alert(1)>");
+    expect(clean).not.toContain("onerror");
+    expect(clean).not.toContain("alert");
+    expect(findings.some((f) => f.category === "script_injection")).toBe(true);
+  });
+
+  it("4.16 sanitiseMarkdown strips entity-encoded event handler (named)", () => {
+    const { clean, findings } = sanitiseMarkdown("<img src=x onerror&equals;alert(1)>");
+    expect(clean).not.toContain("onerror");
+    expect(clean).not.toContain("alert");
+    expect(findings.some((f) => f.category === "script_injection")).toBe(true);
+  });
+
+  it("L4: preserves content inside tilde code fences", () => {
+    const md = "~~~\n<script>alert(1)</script>\n~~~";
+    const { clean } = sanitiseMarkdown(md);
+    expect(clean).toContain("<script>alert(1)</script>");
+  });
+
+  it("L5: removes image with exotic event handler in alt text", () => {
+    const md = '![a"onpointerover="alert(1)](x.png)';
+    const { clean } = sanitiseMarkdown(md);
+    expect(clean).not.toContain("onpointerover");
+  });
+
+  it("L5: removes image with onanimationstart in URL", () => {
+    const md = '![img](x"onanimationstart="alert(1))';
+    const { clean } = sanitiseMarkdown(md);
+    expect(clean).not.toContain("onanimationstart");
+  });
+
+  it("L5: catches escaped syntax with exotic handler", () => {
+    const md = '!\\[a"ontransitionend="alert(1)\\](x)';
+    const { clean } = sanitiseMarkdown(md);
+    expect(clean).not.toContain("ontransitionend");
   });
 
   it("4.10 --no-images strips images", () => {

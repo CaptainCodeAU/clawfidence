@@ -1,5 +1,6 @@
 import MarkdownIt from "markdown-it";
 import type { Finding } from "../types.js";
+import { normaliseUri } from "../utils/normalise-uri.js";
 
 const ALLOWED_SCHEMES = ["https:", "http:", "mailto:", "tel:"];
 
@@ -23,22 +24,24 @@ function makeFinding(
   };
 }
 
-function normaliseUri(uri: string): string {
-  let decoded = uri;
-  try {
-    decoded = decodeURIComponent(uri);
-  } catch {
-    // ignore
-  }
-  return decoded.replace(/[\s\x00-\x1f]/g, "").toLowerCase();
-}
-
 function isIpAddress(hostname: string): boolean {
-  return /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname);
+  // Strip brackets (IPv6 hostnames include them, e.g. [::1])
+  const h = hostname.replace(/^\[|\]$/g, "");
+  // Standard dotted-quad IPv4
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  // IPv6 (e.g. ::1, 2001:db8::1)
+  if (/^[0-9a-f:]+$/i.test(h) && h.includes(":")) return true;
+  // Hex IP (e.g. 0xC0A80101)
+  if (/^0x[0-9a-f]+$/i.test(h)) return true;
+  // Decimal IP (single large number, e.g. 3232235777)
+  if (/^\d{4,}$/.test(h)) return true;
+  // Octal IP (leading zero in first octet, e.g. 0300.0250.0001.0001)
+  if (/^0\d/.test(h) && h.includes(".")) return true;
+  return false;
 }
 
 function isIdnHomograph(hostname: string): boolean {
-  return hostname.startsWith("xn--");
+  return hostname.split(".").some((label) => label.startsWith("xn--"));
 }
 
 function extractUrls(
@@ -67,7 +70,7 @@ function extractUrls(
 
   // Also scan raw text for URLs in markdown link/image syntax (skip code fences)
   const strippedMd = md
-    .replace(/```[\s\S]*?```/g, "")
+    .replace(/(`{3,}|~{3,})[\s\S]*?\1/g, "")
     .replace(/`[^`\n]+`/g, "");
   const linkRegex = /(!?)\[([^\]]*)\]\(([^)]+)\)/g;
   let match;
@@ -144,9 +147,11 @@ export function scanUrls(
     }
 
     // Parse URL for further checks
+    // Decode percent-encoded brackets for IPv6 (markdown-it encodes [ ] as %5B %5D)
+    const urlForParse = url.replace(/%5B/gi, "[").replace(/%5D/gi, "]");
     let parsed: URL;
     try {
-      parsed = new URL(url);
+      parsed = new URL(urlForParse);
     } catch {
       continue;
     }
@@ -178,8 +183,9 @@ export function scanUrls(
 
     // Prefix allowlists
     if (type === "link" && options?.allowedLinkPrefixes) {
+      const urlLower = url.toLowerCase();
       const allowed = options.allowedLinkPrefixes.some((prefix) =>
-        url.startsWith(prefix),
+        urlLower.startsWith(prefix.toLowerCase()),
       );
       if (!allowed) {
         findings.push(
@@ -194,8 +200,9 @@ export function scanUrls(
     }
 
     if (type === "image" && options?.allowedImagePrefixes) {
+      const urlLower = url.toLowerCase();
       const allowed = options.allowedImagePrefixes.some((prefix) =>
-        url.startsWith(prefix),
+        urlLower.startsWith(prefix.toLowerCase()),
       );
       if (!allowed) {
         findings.push(

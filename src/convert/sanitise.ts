@@ -168,8 +168,6 @@ export function sanitiseHtml(html: string): {
       "rp",
       "bdo",
       "wbr",
-      "svg",
-      "math",
     ],
     ALLOW_ATTR: [
       "href",
@@ -209,16 +207,10 @@ export function sanitiseHtml(html: string): {
       "meta",
       "noscript",
       "template",
+      "svg",
+      "math",
     ],
-    FORBID_ATTR: [
-      "onerror",
-      "onload",
-      "onclick",
-      "onmouseover",
-      "onfocus",
-      "onblur",
-      "style",
-    ],
+    FORBID_ATTR: ["style"],
   });
 
   // Remove hooks to prevent leaking between calls
