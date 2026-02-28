@@ -5,13 +5,14 @@ function makeFinding(
   severity: Finding["severity"],
   snippet: string,
   description: string,
+  confidence?: Finding["confidence"],
 ): Finding {
   findingCounter++;
   return {
     id: `uni-${String(findingCounter).padStart(3, "0")}`,
     category: "suspicious_unicode",
     severity,
-    confidence: "confirmed",
+    confidence: confidence ?? "confirmed",
     snippet: snippet.slice(0, 200),
     description,
     action: "flagged",
@@ -68,6 +69,11 @@ const VARIATION_SELECTORS: Record<string, string> = {
 // Arabic/Persian script range for checking legitimate ZWNJ usage
 const ARABIC_PERSIAN_REGEX =
   /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+// Latin script ranges (Basic Latin + Latin Extended)
+const LATIN_REGEX = /[A-Za-z\u00C0-\u024F]/;
+// Cyrillic script range
+const CYRILLIC_REGEX = /[\u0400-\u04FF]/;
 
 function isLegitimateZwnj(text: string, index: number): boolean {
   if (text[index] !== "\u200C") return false;
@@ -161,9 +167,40 @@ export function scanUnicode(
     let idx = text.indexOf(char);
     while (idx !== -1) {
       findings.push(
-        makeFinding("warning", text.slice(Math.max(0, idx - 10), idx + 10), desc),
+        makeFinding(
+          "warning",
+          text.slice(Math.max(0, idx - 10), idx + 10),
+          desc,
+        ),
       );
       idx = text.indexOf(char, idx + 1);
+    }
+  }
+
+  // Check for mixed Latin-Cyrillic script (homoglyph attacks)
+  const lines = text.split("\n");
+  let inCodeFence = false;
+  for (const line of lines) {
+    const trimmed = line.trimStart();
+    if (/^(`{3,}|~{3,})/.test(trimmed)) {
+      inCodeFence = !inCodeFence;
+      continue;
+    }
+    if (inCodeFence) continue;
+
+    const words = line.split(/\s+/);
+    for (const word of words) {
+      if (word.length === 0) continue;
+      if (LATIN_REGEX.test(word) && CYRILLIC_REGEX.test(word)) {
+        findings.push(
+          makeFinding(
+            "warning",
+            word,
+            `Mixed Latin-Cyrillic script in word: ${word.slice(0, 50)} (possible homoglyph attack)`,
+            "suspicious",
+          ),
+        );
+      }
     }
   }
 
