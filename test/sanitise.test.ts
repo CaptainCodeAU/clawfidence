@@ -70,6 +70,21 @@ describe("sanitiseHtml", () => {
     expect(serious.length).toBe(0);
   });
 
+  it("3.11 strips SVG elements", () => {
+    const { clean } = sanitiseHtml(
+      '<p>Text</p><svg><animate onbegin="alert(1)"></svg>',
+    );
+    expect(clean).not.toContain("<svg");
+    expect(clean).not.toContain("<animate");
+  });
+
+  it("3.12 strips MathML elements", () => {
+    const { clean } = sanitiseHtml(
+      "<p>Text</p><math><mrow><mi>x</mi></mrow></math>",
+    );
+    expect(clean).not.toContain("<math");
+  });
+
   it("3.10 strips CSS expression()", () => {
     const { clean } = sanitiseHtml(
       '<div style="width:expression(alert(1))">text</div>',
