@@ -63,4 +63,24 @@ describe("scanUrls", () => {
     const findings = scanUrls("[x](http://a.b.xn--nxasmq6b.c.com/path)");
     expect(findings.some((f) => f.category === "suspicious_url")).toBe(true);
   });
+
+  it("6.12 detects IPv6 address URL", () => {
+    const findings = scanUrls("[x](http://[::1]/admin)");
+    expect(findings.some((f) => f.category === "suspicious_url")).toBe(true);
+  });
+
+  it("6.13 detects hex IP address URL", () => {
+    const findings = scanUrls("[x](http://0xC0A80101/)");
+    expect(findings.some((f) => f.category === "suspicious_url")).toBe(true);
+  });
+
+  it("6.14 detects decimal IP address URL", () => {
+    const findings = scanUrls("[x](http://3232235777/)");
+    expect(findings.some((f) => f.category === "suspicious_url")).toBe(true);
+  });
+
+  it("6.14b detects octal IP address URL", () => {
+    const findings = scanUrls("[x](http://0300.0250.0001.0001/)");
+    expect(findings.some((f) => f.category === "suspicious_url")).toBe(true);
+  });
 });

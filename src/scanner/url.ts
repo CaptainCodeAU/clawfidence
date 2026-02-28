@@ -25,7 +25,19 @@ function makeFinding(
 }
 
 function isIpAddress(hostname: string): boolean {
-  return /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname);
+  // Strip brackets (IPv6 hostnames include them, e.g. [::1])
+  const h = hostname.replace(/^\[|\]$/g, "");
+  // Standard dotted-quad IPv4
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  // IPv6 (e.g. ::1, 2001:db8::1)
+  if (/^[0-9a-f:]+$/i.test(h) && h.includes(":")) return true;
+  // Hex IP (e.g. 0xC0A80101)
+  if (/^0x[0-9a-f]+$/i.test(h)) return true;
+  // Decimal IP (single large number, e.g. 3232235777)
+  if (/^\d{4,}$/.test(h)) return true;
+  // Octal IP (leading zero in first octet, e.g. 0300.0250.0001.0001)
+  if (/^0\d/.test(h) && h.includes(".")) return true;
+  return false;
 }
 
 function isIdnHomograph(hostname: string): boolean {
@@ -135,9 +147,11 @@ export function scanUrls(
     }
 
     // Parse URL for further checks
+    // Decode percent-encoded brackets for IPv6 (markdown-it encodes [ ] as %5B %5D)
+    const urlForParse = url.replace(/%5B/gi, "[").replace(/%5D/gi, "]");
     let parsed: URL;
     try {
-      parsed = new URL(url);
+      parsed = new URL(urlForParse);
     } catch {
       continue;
     }
