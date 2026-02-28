@@ -152,8 +152,8 @@ export function scanMarkdownXss(md: string): Finding[] {
 
     // Event handler injection in image/link alt text or URL breakout
     if (
-      /!\[.*(?:onerror|onload|onfocus)\s*=/i.test(line) ||
-      /\]\(.*(?:onerror|onload|onfocus)\s*=/i.test(line)
+      /!\[.*on[a-z]+\s*=/i.test(line) ||
+      /\]\(.*on[a-z]+\s*=/i.test(line)
     ) {
       findings.push(
         makeFinding(
@@ -169,7 +169,7 @@ export function scanMarkdownXss(md: string): Finding[] {
     if (
       /<style>/i.test(line) &&
       /<!--/.test(line) &&
-      /onerror|onload|onfocus/i.test(line)
+      /\bon[a-z]+\s*=/i.test(line)
     ) {
       findings.push(
         makeFinding(

@@ -83,6 +83,18 @@ describe("scanMarkdownXss", () => {
     expect(findings.length).toBeGreaterThan(0);
   });
 
+  it("L5: detects exotic event handlers in image breakout", () => {
+    const md = '![a"onanimationstart="alert(1)](x)';
+    const findings = scanMarkdownXss(md);
+    expect(findings.some(f => f.category === "script_injection")).toBe(true);
+  });
+
+  it("L5: detects onpointerover in nested parser confusion", () => {
+    const md = '<style><!--</style><img src=x onpointerover=alert(1)>-->';
+    const findings = scanMarkdownXss(md);
+    expect(findings.some(f => f.category === "script_injection")).toBe(true);
+  });
+
   it("5.13 non-allowlisted scheme passes clean", () => {
     const findings = scanMarkdownXss("[a](https://example.com)");
     expect(findings.length).toBe(0);
