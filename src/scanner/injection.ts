@@ -42,7 +42,7 @@ const INJECTION_PATTERNS = [
   },
 ];
 
-const SYSTEM_PREFIX_PATTERN = /^SYSTEM:\s/m;
+const SYSTEM_PREFIX_PATTERN = /^SYSTEM:\s/im;
 
 function isInsideCodeFence(text: string, matchIndex: number): boolean {
   const before = text.slice(0, matchIndex);
