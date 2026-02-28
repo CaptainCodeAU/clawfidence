@@ -70,7 +70,7 @@ function extractUrls(
 
   // Also scan raw text for URLs in markdown link/image syntax (skip code fences)
   const strippedMd = md
-    .replace(/```[\s\S]*?```/g, "")
+    .replace(/(`{3,}|~{3,})[\s\S]*?\1/g, "")
     .replace(/`[^`\n]+`/g, "");
   const linkRegex = /(!?)\[([^\]]*)\]\(([^)]+)\)/g;
   let match;

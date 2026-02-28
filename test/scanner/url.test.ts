@@ -97,4 +97,11 @@ describe("scanUrls", () => {
     });
     expect(findings.length).toBe(0);
   });
+
+  it("L4: ignores URLs inside tilde code fences", () => {
+    const md = "~~~\n[click](javascript:alert(1))\n~~~";
+    const findings = scanUrls(md);
+    const scriptFindings = findings.filter(f => f.category === "script_injection");
+    expect(scriptFindings).toHaveLength(0);
+  });
 });
