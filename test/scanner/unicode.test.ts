@@ -47,4 +47,24 @@ describe("scanUnicode", () => {
     });
     expect(cleaned).toBe("Hello world");
   });
+
+  it("L3: detects basic variation selectors (U+FE00-U+FE0F)", () => {
+    const { findings } = scanUnicode("Hello\uFE0Fworld");
+    expect(findings.some(f => f.description.includes("presentation selector"))).toBe(true);
+  });
+
+  it("L3: strips variation selectors in llmSafe mode", () => {
+    const { cleaned } = scanUnicode("Hello\uFE0Fworld", { llmSafe: true });
+    expect(cleaned).toBe("Helloworld");
+  });
+
+  it("L3: detects supplementary variation selectors (U+E0100-U+E01EF)", () => {
+    const { findings } = scanUnicode("Hello\u{E0100}world");
+    expect(findings.some(f => f.description.includes("Variation selector supplement"))).toBe(true);
+  });
+
+  it("L3: strips supplementary variation selectors in llmSafe mode", () => {
+    const { cleaned } = scanUnicode("Hello\u{E0100}world", { llmSafe: true });
+    expect(cleaned).toBe("Helloworld");
+  });
 });
